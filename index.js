@@ -1,4 +1,4 @@
-// filepath: c:\Users\Cristian Chamo\Desktop\ProyectoFinalEstadistica\index.js
+//
 class Excel {
     constructor(content) {
         this.content = content; 
@@ -31,6 +31,9 @@ class RowCollection {
     }
 }
 
+// Clase para manejar las filas del Excel
+//Esto se debe de cambair segun el formato del excel
+//Cada uno se debe de llamar igual que el encabezado del excel esto solo es un ejemplo de una prueba que hice
 class Row {
     constructor(row) {
         this.row = row;
@@ -73,6 +76,7 @@ class Row {
     }
 }
 
+//clase para manejar la impresión de los datos en la tabla
 class ExcelPrint {
     static print(excel) {
         const table = document.getElementById("resultado-table");
@@ -113,22 +117,20 @@ class ExcelPrint {
     }
 }
 
-// Evento para manejar la carga del archivo Excel
+//Evento para manejar la carga del archivo Excel
 const excelInput = document.getElementById("exel-input");
 excelInput.addEventListener("change", async function() {
     try {
         const contenido = await readXlsxFile(excelInput.files[0]);
         const excel = new Excel(contenido);
         
-        // Imprimir los datos en la tabla
-        ExcelPrint.print(excel);
-        
-        // Log para debugging
+        //Imprimir los datos en la tabla
+        ExcelPrint.print(excel)
         console.log('Excel cargado:', {
             contenido: contenido,
             encabezados: excel.header(),
             filas: excel.rows()
-        });
+        })
     } catch (error) {
         console.error('Error al procesar el archivo:', error);
         document.getElementById("result-body").innerHTML = `
@@ -138,4 +140,4 @@ excelInput.addEventListener("change", async function() {
                 </td>
             </tr>`;
     }
-});
+})
