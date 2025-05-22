@@ -27,12 +27,15 @@ body {
 }
 
 .table-responsive {
-    overflow-x: auto;
-    white-space: nowrap;
+  overflow-x: auto !important;
+  display: block;
+  width: 100%;
 }
 
-.table th, .table td {
-    white-space: nowrap; /* evita que el texto se divida en varias líneas */
-    padding: 8px;
+.table {
+  min-width: 1800px; /* Aumenta esto si aún no caben todas */
+  white-space: nowrap; /* Evita que el texto se divida verticalmente */
 }
+
+
 

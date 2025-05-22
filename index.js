@@ -63,8 +63,8 @@ class Row {
         return this.row[5];
     }
 
-    Para_qué_ha_utilizado_o_usaría_la_IA () {
-        return this.row[6];
+   Para_qué_ha_utilizado_o_usaría_la_IA () {
+    return this.row[6];
     }
 
     Qué_nivel_de_confianza_tiene_en_los_resultados_que_proporciona_la_IA() {
@@ -74,6 +74,7 @@ class Row {
     Qué_cree_que_es_más_probable_con_el_avance_de_la_IA() {
         return this.row[8];
     }
+
 }
 
 //clase para manejar la impresión de los datos en la tabla
