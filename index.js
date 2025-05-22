@@ -39,39 +39,39 @@ class Row {
         this.row = row;
     }
 
-    Nombre() {
+    Edad() {
         return this.row[0];
     }
 
-    Apellido() {
+    Género() {
         return this.row[1];
     }
 
-    Direccion() {
+    OcupaciónActual() {
         return this.row[2];
     }
 
-    Telefono() {
+    Ha_utilizado_alguna_vez_una_herramienta_de_inteligencia_artificial_como_ChatGPT_Copilot_o_similares() {
         return this.row[3];
     }
 
-    Correo() {
+    Está_de_acuerdo_con_el_uso_de_la_IA_en_la_educación_por_ejemplo_para_apoyar_en_tareas_o_estudios() {
         return this.row[4];
     }
 
-    Pregunta6() {
+    Prefiere_que_una_empresa_utilice_IA_para_atención_al_cliente_o_que_sea_atendido_por_una_persona() {
         return this.row[5];
     }
 
-    Pregunta7() {
+    Para_qué_ha_utilizado_o_usaría_la_IA () {
         return this.row[6];
     }
 
-    Pregunta8() {
+    Qué_nivel_de_confianza_tiene_en_los_resultados_que_proporciona_la_IA() {
         return this.row[7];
     }
 
-    Pregunta9() {
+    Qué_cree_que_es_más_probable_con_el_avance_de_la_IA() {
         return this.row[8];
     }
 }
@@ -103,15 +103,15 @@ class ExcelPrint {
             const row = rows.get(i);
             tbody.innerHTML += `
                 <tr>
-                    <td>${row.Nombre()}</td>
-                    <td>${row.Apellido()}</td>
-                    <td>${row.Direccion()}</td>
-                    <td>${row.Telefono()}</td>
-                    <td>${row.Correo()}</td>
-                    <td>${row.Pregunta6()}</td>
-                    <td>${row.Pregunta7()}</td>
-                    <td>${row.Pregunta8()}</td>
-                    <td>${row.Pregunta9()}</td>
+                    <td>${row.Edad()}</td>
+                    <td>${row.Género()}</td>
+                    <td>${row.OcupaciónActual()}</td>
+                    <td>${row.Ha_utilizado_alguna_vez_una_herramienta_de_inteligencia_artificial_como_ChatGPT_Copilot_o_similares()}</td>
+                    <td>${row.Está_de_acuerdo_con_el_uso_de_la_IA_en_la_educación_por_ejemplo_para_apoyar_en_tareas_o_estudios()}</td>
+                    <td>${row.Prefiere_que_una_empresa_utilice_IA_para_atención_al_cliente_o_que_sea_atendido_por_una_persona()}</td>
+                    <td>${row.Para_qué_ha_utilizado_o_usaría_la_IA()}</td>
+                    <td>${row.Qué_nivel_de_confianza_tiene_en_los_resultados_que_proporciona_la_IA()}</td>
+                    <td>${row.Qué_cree_que_es_más_probable_con_el_avance_de_la_IA()}</td>
                 </tr>`;
         }
     }
