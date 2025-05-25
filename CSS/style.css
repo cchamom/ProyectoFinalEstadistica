@@ -1,0 +1,74 @@
+body {
+padding: 20px;
+background: #9CECFB;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to right, #0052D4, #65C7F7, #9CECFB);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to right, #0052D4, #65C7F7, #9CECFB); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+background-color: #fdfdfd;
+color: #333;
+
+
+}
+
+h1, h2, h3 {
+   font-family: 'Quicksand', sans-serif;
+}
+
+.btn-white-text {
+    color: white !important;
+}
+
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.table {
+    margin-top: 20px;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.table td, .table th {
+    padding: 10px;
+}
+
+.text-danger {
+    color: #dc3545;
+    padding: 15px;
+    text-align: center;
+}
+
+.table-responsive {
+  overflow-x: auto !important;
+  display: block;
+  width: 100%;
+}
+
+.table {
+  min-width: 1800px; /* Aumenta esto si aún no caben todas */
+  white-space: nowrap; /* Evita que el texto se divida verticalmente */
+}
+
+.custom-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+}
+
+.custom-card:hover {
+            box-shadow: 0 0 20px rgba(25, 186, 194, 0.2);
+            transform: translateY(5px);
+            gap: 10px;
+}
+
+
+
+
+
