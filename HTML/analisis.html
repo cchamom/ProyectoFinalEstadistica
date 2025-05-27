@@ -18,9 +18,21 @@
                 <div class="col-md-6 mb-2">
                     <label for="exel-input" class="form-label fw-bold">Selecciona tu archivo Excel:</label>
                     <input type="file" id="exel-input" class="form-control" accept=".xlsx,.xls" />
+                    <canvas id="curvaNormalChart" width="800" height="400"></canvas>
+
         </div>
+            <div class="my-4">
+        <h3 class="text-center">Curva Normal con Sombreado</h3>
+        <div id="curva-normal" style="height: 500px;"></div>
+    </div>
+
     </div>
     <script src="https://unpkg.com/read-excel-file@5.x/bundle/read-excel-file.min.js"></script>
     <script src="/JS/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.3.2"></script>
+    <script src="/JS/curvaNormal.js"></script>
+
+
 </body>
 </html>
