@@ -90,4 +90,53 @@ excelInput.addEventListener("change", async function() {
                 </td>
             </tr>`;
     }
+    function calcularMedia(arr) {
+    const suma = arr.reduce((acc, val) => acc + val, 0);
+    return suma / arr.length;
+}
+
+function calcularDesviacion(arr, media) {
+    const sumaCuadrados = arr.reduce((acc, val) => acc + Math.pow(val - media, 2), 0);
+    return Math.sqrt(sumaCuadrados / arr.length);
+}
+
+function generarCurvaNormal(media, desviacion, rango = 3) {
+    const x = [];
+    const y = [];
+    const min = media - rango * desviacion;
+    const max = media + rango * desviacion;
+    const paso = (max - min) / 100;
+
+    for (let i = min; i <= max; i += paso) {
+        x.push(i);
+        const pdf = (1 / (desviacion * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((i - media) / desviacion, 2));
+        y.push(pdf);
+    }
+
+    return { x, y };
+}
+
+function graficarCurvaNormal(datosNumericos) {
+    const media = calcularMedia(datosNumericos);
+    const desviacion = calcularDesviacion(datosNumericos, media);
+    const { x, y } = generarCurvaNormal(media, desviacion);
+
+    const curva = {
+        x: x,
+        y: y,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Curva Normal',
+        line: { color: 'blue' },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(0, 128, 255, 0.3)'
+    };
+
+    Plotly.newPlot('curva-normal', [curva], {
+        title: 'Distribución Normal',
+        xaxis: { title: 'Valor' },
+        yaxis: { title: 'Densidad de probabilidad' }
+    });
+}
+
 })
