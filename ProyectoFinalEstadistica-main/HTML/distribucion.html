@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Probabilidades con Distribución Normal</title>
+  <!-- CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/CSS/style.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    pre {
+      white-space: pre-wrap;
+      font-family: 'Quicksand', sans-serif;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <div class="custom-card">
+      <h1 class="text-center mb-4">📊 Distribución Normal</h1>
+
+      <div class="mb-4">
+        <label for="fileInput" class="form-label fw-bold">Selecciona tu archivo Excel (.xlsx):</label>
+        <input type="file" id="fileInput" class="form-control" accept=".xlsx" />
+      </div>
+
+      <pre id="output"></pre>
+
+      <div class="mt-4">
+        <a href="index.html" class="btn btn-primary btn-white-text">← Regresar al Inicio</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    // Funciones para calcular distribución normal estándar (Z) y probabilidad acumulada usando error function (erf)
+    function phi(z) {
+      // CDF de la normal estándar usando aproximación erf
+      return 0.5 * (1 + erf(z / Math.sqrt(2)));
+    }
+
+    // Función error (erf) aproximada
+    function erf(x) {
+      // Constantes para aproximación
+      const a1 =  0.254829592;
+      const a2 = -0.284496736;
+      const a3 =  1.421413741;
+      const a4 = -1.453152027;
+      const a5 =  1.061405429;
+      const p  =  0.3275911;
+
+      const sign = (x < 0) ? -1 : 1;
+      x = Math.abs(x);
+      const t = 1 / (1 + p * x);
+      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+      return sign * y;
+    }
+
+    // Funciones para distribución normal con media mu y desviación sigma
+    const DistribucionNormal = {
+      // Probabilidad P(X ≤ x)
+      probMenorQue: function(x, mu, sigma) {
+        const z = (x - mu) / sigma;
+        return phi(z);
+      },
+      // Probabilidad P(a ≤ X ≤ b)
+      probEntre: function(a, b, mu, sigma) {
+        return this.probMenorQue(b, mu, sigma) - this.probMenorQue(a, mu, sigma);
+      }
+    };
+
+    // Evento para manejar carga del archivo
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        let output = '';
+
+        json.forEach((row, i) => {
+          // Tomamos los valores que pueden estar en minúsculas o mayúsculas
+          const mu = parseFloat(row.mu ?? row.MU);
+          const sigma = parseFloat(row.sigma ?? row.SIGMA);
+          const x = parseFloat(row.x ?? row.X);
+          const a = parseFloat(row.a ?? row.A);
+          const b = parseFloat(row.b ?? row.B);
+
+          output += `Fila ${i + 1}:\n`;
+          output += `Media (μ): ${mu}, Desviación estándar (σ): ${sigma}\n`;
+
+          if (!isNaN(x)) {
+            const p = DistribucionNormal.probMenorQue(x, mu, sigma);
+            output += `P(X ≤ ${x}) = P(Z ≤ ${(x - mu) / sigma}) = ${p.toFixed(6)}\n`;
+          }
+
+          if (!isNaN(a) && !isNaN(b)) {
+            const p = DistribucionNormal.probEntre(a, b, mu, sigma);
+            output += `P(${a} ≤ X ≤ ${b}) = P(${(a - mu) / sigma} ≤ Z ≤ ${(b - mu) / sigma}) = ${p.toFixed(6)}\n`;
+          }
+          output += '\n';
+        });
+
+        document.getElementById('output').textContent = output || 'No se encontraron datos válidos.';
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  </script>
+</body>
+</html>
