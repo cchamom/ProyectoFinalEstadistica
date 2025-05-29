@@ -1,92 +1,57 @@
 class Excel {
-    constructor(content) {
-        this.content = content; 
-    }
-
-    header() {
-        return this.content[0];
-    }
-
-    rows() {
-        return new RowCollection(this.content.slice(1, this.content.length));
-    }
+  constructor(content) {
+    this.content = content;
+  }
+  header() { return this.content[0]; }
+  rows() { return new RowCollection(this.content.slice(1)); }
+  toObjectArray() {
+    const keys = this.header();
+    return this.rows().rows.map(row =>
+      Object.fromEntries(row.map((val, i) => [keys[i], val]))
+    );
+  }
 }
-
 class RowCollection {
-    constructor(rows) {
-        this.rows = rows;
-    }
-
-    get(index) {
-        return this.rows[index];
-    }
-
-    count() {
-        return this.rows.length;
-    }
+  constructor(rows) { this.rows = rows; }
+  get(index) { return this.rows[index]; }
+  count() { return this.rows.length; }
 }
-
-// Clase para manejar las filas del Excel
-//Esto se debe de cambair segun el formato del excel
-//Cada uno se debe de llamar igual que el encabezado del excel esto solo es un ejemplo de una prueba que hice
-
-//clase para manejar la impresión de los datos en la tabla
-class ExcelPrint {
-    static print(excel) {
-        const table = document.getElementById("resultado-table");
-        const thead = table.querySelector("thead tr");
-        const tbody = table.querySelector("tbody");
-
-        if (!table || !thead || !tbody) {
-            console.error("No se encontraron los elementos de la tabla");
-            return;
-        }
-
-        // Limpiar la tabla
-        thead.innerHTML = "";
-        tbody.innerHTML = "";
-
-        // Agregar encabezados
-        const headerRow = excel.header();
-        headerRow.forEach(title => {
-            thead.innerHTML += `<th>${title}</th>`;
-        });
-
-        // Agregar datos
-        const rows = excel.rows();
-        for(let i = 0; i < rows.count(); i++) {
-            const row = rows.get(i);
-            let rowHtml = "<tr>";
-            row.forEach(cell => {
-                rowHtml += `<td>${cell ??""}</td>`;
-            })
-            rowHtml += "</tr>";
-            tbody.innerHTML += rowHtml;
-        }
+document.getElementById("exel-input").addEventListener("change", async function () {
+  try {
+    const contenido = await readXlsxFile(this.files[0]);
+    const excel = new Excel(contenido);
+    const output = document.getElementById("output");
+    let textoSalida = "";
+    const edadMap = {"Menor de edad": 17, "18-25": 21.5, "26-35": 30.5, "36-45": 40.5, "45 o más": 50};
+    const confianzaMap = {"Baja": 1, "Media": 2, "Alta": 3};
+    const datos = excel.toObjectArray();
+    const edades = [], confianzas = [];
+    datos.forEach(row => {
+      const edadNum = edadMap[row["Edad"]];
+      if (edadNum) edades.push(edadNum);
+      const confianza = confianzaMap[row["¿Qué nivel de confianza tiene en los resultados que proporciona la IA?"]];
+      if (confianza) confianzas.push(confianza);
+    });
+    function calcular(label, valores, ejemplos) {
+      const n = valores.length;
+      const media = valores.reduce((a, b) => a + b, 0) / n;
+      const desviacion = Math.sqrt(valores.map(x => Math.pow(x - media, 2)).reduce((a, b) => a + b) / n);
+      textoSalida += `🔸 ${label}:
+   Media (μ): ${media.toFixed(2)}
+   Desviación estándar (σ): ${desviacion.toFixed(2)}
+`;
+      ejemplos.forEach(val => {
+        const prob = DistribucionNormal.probMenorQue(val, media, desviacion);
+        textoSalida += `   P(X ≤ ${val}) = ${prob.toFixed(6)}
+`;
+      });
+      textoSalida += "\n";
     }
-}
-
-//Evento para manejar la carga del archivo Excel
-const excelInput = document.getElementById("exel-input");
-excelInput.addEventListener("change", async function() {
-    try {
-        const contenido = await readXlsxFile(excelInput.files[0]);
-        const excel = new Excel(contenido);
-        
-        //Imprimir los datos en la tabla
-        ExcelPrint.print(excel)
-        console.log('Excel cargado:', {
-            contenido: contenido,
-            encabezados: excel.header(),
-            filas: excel.rows()
-        })
-    } catch (error) {
-        console.error('Error al procesar el archivo:', error);
-        document.getElementById("result-body").innerHTML = `
-            <tr>
-                <td colspan="9" class="text-danger">
-                    Error al procesar el archivo: ${error.message}
-                </td>
-            </tr>`;
-    }
-})
+    if (edades.length > 0) calcular("Edad", edades, [20, 30, 40]);
+    if (confianzas.length > 0) calcular("Nivel de confianza en la IA", confianzas, [1, 2, 3]);
+    output.textContent = textoSalida || "No se encontraron variables válidas para distribución normal.";
+  } catch (error) {
+    console.error("Error:", error);
+    document.getElementById("output").textContent = `Error: ${error.message}`;
+  }
+});
