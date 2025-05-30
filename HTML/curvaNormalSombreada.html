@@ -1,0 +1,59 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visor de Excel - Curva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="estilos.css" rel="stylesheet"> <!-- Tu CSS universal -->
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">📊 Visor de la curva normal con sombreado.</h1>
+
+    <!-- Carga de archivo Excel -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <input type="file" id="exel-input" accept=".xlsx" class="form-control w-50">
+        <button id="btn-borrar-localstorage" class="btn btn-danger">🗑 Borrar datos guardados</button>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped" id="resultado-table">
+            <thead><tr></tr></thead>
+            <tbody id="result-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Opciones para graficar -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="columna-datos" class="form-label">Selecciona la columna a analizar:</label>
+            <select id="columna-datos" class="form-select"></select>
+        </div>
+        <div class="col-md-3">
+            <label for="x1" class="form-label">Valor mínimo (X1):</label>
+            <input type="number" id="x1" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label for="x2" class="form-label">Valor máximo (X2):</label>
+            <input type="number" id="x2" class="form-control" />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button id="graficar" class="btn btn-primary">📈 Graficar curva</button>
+    </div>
+
+    <!-- Área para gráfica -->
+    <div id="grafica" style="height: 500px;"></div>
+</div>
+
+<!-- Librerías externas -->
+<script src="https://unpkg.com/read-excel-file@5.5.2/bundle/read-excel-file.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<!-- Archivos JS -->
+<script src="/JS/index.js"></script>
+<script src="/JS/curvaNormal.js"></script>
+</body>
+</html>

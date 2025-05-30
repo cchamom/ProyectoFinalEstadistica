@@ -91,3 +91,24 @@ excelInput.addEventListener("change", async function () {
             </tr>`;
     }
 });
+
+// Botón para limpiar tabla y localStorage
+const limpiarBtn = document.getElementById("limpiar-tabla");
+limpiarBtn.addEventListener("click", () => {
+    localStorage.removeItem("excelData");
+
+    const table = document.getElementById("resultado-table");
+    table.querySelector("thead").innerHTML = "<tr></tr>";
+    table.querySelector("tbody").innerHTML = "";
+
+    console.log("Tabla limpiada y datos eliminados de localStorage.");
+});
+// Recuperar contenido guardado al cargar la página
+window.addEventListener("DOMContentLoaded", function() {
+    const stored = localStorage.getItem("excelData");
+    if (stored) {
+        const contenido = JSON.parse(stored);
+        const excel = new Excel(contenido);
+        ExcelPrint.print(excel);
+    }
+});
