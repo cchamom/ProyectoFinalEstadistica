@@ -68,6 +68,10 @@ const excelInput = document.getElementById("exel-input");
 excelInput.addEventListener("change", async function () {
     try {
         const contenido = await readXlsxFile(excelInput.files[0]);
+
+        // Guardar en localStorage
+        localStorage.setItem("excelContent", JSON.stringify(contenido));
+
         const excel = new Excel(contenido);
 
         // Imprimir en la tabla
