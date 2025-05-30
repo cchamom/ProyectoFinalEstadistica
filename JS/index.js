@@ -1,6 +1,6 @@
 class Excel {
     constructor(content) {
-        this.content = content; 
+        this.content = content;
     }
 
     header() {
@@ -8,7 +8,7 @@ class Excel {
     }
 
     rows() {
-        return new RowCollection(this.content.slice(1, this.content.length));
+        return new RowCollection(this.content.slice(1));
     }
 }
 
@@ -26,15 +26,10 @@ class RowCollection {
     }
 }
 
-// Clase para manejar las filas del Excel
-//Esto se debe de cambair segun el formato del excel
-//Cada uno se debe de llamar igual que el encabezado del excel esto solo es un ejemplo de una prueba que hice
-
-//clase para manejar la impresión de los datos en la tabla
 class ExcelPrint {
     static print(excel) {
         const table = document.getElementById("resultado-table");
-        const thead = table.querySelector("thead tr");
+        const thead = table.querySelector("thead");
         const tbody = table.querySelector("tbody");
 
         if (!table || !thead || !tbody) {
@@ -42,46 +37,52 @@ class ExcelPrint {
             return;
         }
 
-        // Limpiar la tabla
+        // Limpiar tabla
         thead.innerHTML = "";
         tbody.innerHTML = "";
 
         // Agregar encabezados
         const headerRow = excel.header();
-        headerRow.forEach(title => {
-            thead.innerHTML += `<th>${title}</th>`;
-        });
+        thead.innerHTML = "<tr>" + headerRow.map(title => `<th>${title}</th>`).join("") + "</tr>";
 
-        // Agregar datos
+        // Agregar filas
         const rows = excel.rows();
-        for(let i = 0; i < rows.count(); i++) {
+        for (let i = 0; i < rows.count(); i++) {
             const row = rows.get(i);
             let rowHtml = "<tr>";
             row.forEach(cell => {
-                rowHtml += `<td>${cell ??""}</td>`;
-            })
+                rowHtml += `<td>${cell ?? ""}</td>`;
+            });
             rowHtml += "</tr>";
             tbody.innerHTML += rowHtml;
         }
     }
 }
 
-//Evento para manejar la carga del archivo Excel
-const excelInput = document.getElementById("exel-input");
-excelInput.addEventListener("change", async function() {
+// Al cargar la página, intenta cargar los datos desde localStorage
+window.addEventListener("DOMContentLoaded", () => {
+    const guardado = localStorage.getItem("excelContent");
+    if (guardado) {
+        const contenido = JSON.parse(guardado);
+        const excel = new Excel(contenido);
+        ExcelPrint.print(excel);
+    }
+});
+
+// Evento cuando se selecciona un archivo Excel
+const excelInput = document.getElementById("excel-input");
+excelInput.addEventListener("change", async function () {
     try {
         const contenido = await readXlsxFile(excelInput.files[0]);
+
+        // Guardar en localStorage
+        localStorage.setItem("excelContent", JSON.stringify(contenido));
+
         const excel = new Excel(contenido);
-        
-        //Imprimir los datos en la tabla
-        ExcelPrint.print(excel)
-        console.log('Excel cargado:', {
-            contenido: contenido,
-            encabezados: excel.header(),
-            filas: excel.rows()
-        })
+        ExcelPrint.print(excel);
+
     } catch (error) {
-        console.error('Error al procesar el archivo:', error);
+        console.error("Error al procesar el archivo:", error);
         document.getElementById("result-body").innerHTML = `
             <tr>
                 <td colspan="9" class="text-danger">
@@ -89,4 +90,4 @@ excelInput.addEventListener("change", async function() {
                 </td>
             </tr>`;
     }
-})
+});
