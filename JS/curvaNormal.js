@@ -124,10 +124,15 @@ function calcular() {
     return sign * y;
   }
 
-  if (val1 < 0) val1 = 0;
-  if (val1 > 1) val1 = 1;
-  if (val2 < 0) val2 = 0;
-  if (val2 > 1) val2 = 1;
+  if (tipo !== "rango") {
+    if (val1 < Math.min(...datos)) val1 = Math.min(...datos);
+    if (val1 > Math.max(...datos)) val1 = Math.max(...datos);
+  } else {
+    if (val1 < Math.min(...datos)) val1 = Math.min(...datos);
+    if (val1 > Math.max(...datos)) val1 = Math.max(...datos);
+    if (val2 < Math.min(...datos)) val2 = Math.min(...datos);
+    if (val2 > Math.max(...datos)) val2 = Math.max(...datos);
+  }
 
   let probabilidad = 0;
   let texto = "";
