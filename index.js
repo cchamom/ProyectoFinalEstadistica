@@ -1,5 +1,5 @@
 //
-class Excel {
+/*class Excel {
     constructor(content) {
         this.content = content; 
     }
@@ -139,4 +139,4 @@ function graficarCurvaNormal(datosNumericos) {
     });
 }
 
-})
+}) */
