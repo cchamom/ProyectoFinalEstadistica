@@ -1,18 +1,18 @@
 let datos = [];
 
-document.getElementById("archivoExcel").addEventListener("change", function(e) {
+document.getElementById("archivoExcel").addEventListener("change", function (e) {
   const archivo = e.target.files[0];
   if (!archivo) return;
 
   const lector = new FileReader();
-  lector.onload = function(e) {
+  lector.onload = function (e) {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: "array" });
     const hoja = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(hoja, { header: 1 });
 
     if (json.length === 0) {
-      alert("El archivo está vacío.");
+      alert("El archivo está vacío o mal formateado.");
       return;
     }
 
@@ -23,17 +23,15 @@ document.getElementById("archivoExcel").addEventListener("change", function(e) {
     select.innerHTML = "";
 
     encabezado.forEach((titulo, index) => {
-      const muestra = filas
-        .map(fila => fila[index])
-        .filter(v => v !== undefined && v !== null);
-
+      const muestra = filas.map(fila => fila[index]).filter(v => v !== undefined && v !== null);
       const hayNumeros = muestra.some(v => !isNaN(parseFloat(v)));
-      const esBinario = muestra.every(v => {
-        const val = String(v).toLowerCase();
-        return val === "sí" || val === "si" || val === "no" || val === "0" || val === "1";
+      const haySiNo = muestra.every(v => {
+        if (typeof v !== "string") return false;
+        const val = v.toString().toLowerCase();
+        return val === "sí" || val === "si" || val === "no";
       });
 
-      if (hayNumeros || esBinario) {
+      if (hayNumeros || haySiNo) {
         const option = document.createElement("option");
         option.value = index;
         option.textContent = titulo || `Columna ${index + 1}`;
@@ -48,172 +46,164 @@ document.getElementById("archivoExcel").addEventListener("change", function(e) {
   lector.readAsArrayBuffer(archivo);
 });
 
-document.getElementById("columna").addEventListener("change", function() {
+document.getElementById("columna").addEventListener("change", function () {
   const index = parseInt(this.value);
   const json = window._datosOriginales || [];
+  const filas = json.slice(1);
 
-  datos = json
-    .slice(1)
-    .map(row => {
-      const val = row[index];
-      if (val === undefined || val === null) return null;
-      const valStr = String(val).toLowerCase();
-      if (valStr === "sí" || valStr === "si") return 1;
-      if (valStr === "no") return 0;
-      const num = parseFloat(val);
-      return isNaN(num) ? null : num;
-    })
-    .filter(v => v !== null);
+  const valoresBrutos = filas.map(row => row[index]).filter(v => v !== undefined && v !== null);
+  const esSiNo = valoresBrutos.length > 0 && valoresBrutos.every(v => {
+    if (typeof v !== "string") return false;
+    const val = v.toString().toLowerCase();
+    return val === "sí" || val === "si" || val === "no";
+  });
 
-  console.log("✅ Datos cargados:", datos);
+  datos = esSiNo
+    ? valoresBrutos.map(v => (v.toString().toLowerCase() === "sí" || v.toString().toLowerCase() === "si") ? 1 : 0)
+    : filas.map(row => parseFloat(row[index])).filter(v => !isNaN(v));
+
+  document.getElementById("resultado").textContent = "";
+  document.getElementById("estadisticas").textContent = "";
+  document.getElementById("grafica").innerHTML = "";
+
+  console.log("Datos cargados:", datos);
 });
+
+function mean(arr) {
+  return arr.length === 0 ? 0 : arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function stdDev(arr) {
+  if (arr.length === 0) return 0;
+  const m = mean(arr);
+  const variance = arr.reduce((sum, x) => sum + (x - m) ** 2, 0) / arr.length;
+  return Math.sqrt(variance);
+}
+
+function normalPDF(x, mean, std) {
+  return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mean) / std) ** 2);
+}
+
+function linspace(start, end, num) {
+  const arr = [];
+  const step = (end - start) / (num - 1);
+  for (let i = 0; i < num; i++) arr.push(start + step * i);
+  return arr;
+}
 
 function calcular() {
   if (!datos || datos.length === 0) {
-    alert("Debes cargar datos y seleccionar una columna válida.");
+    alert("Selecciona una columna con datos válidos primero.");
     return;
   }
 
   const tipo = document.getElementById("tipo").value;
-  const valor1 = parseFloat(document.getElementById("valor1").value);
-  const valor2 = parseFloat(document.getElementById("valor2").value);
+  let val1 = parseFloat(document.getElementById("valor1").value);
+  let val2 = parseFloat(document.getElementById("valor2").value);
 
-  if (isNaN(valor1)) {
-    alert("Debes ingresar al menos el Valor 1.");
+  const media = mean(datos);
+  const desv = stdDev(datos);
+  const n = datos.length;
+
+  if (desv === 0) {
+    alert("La desviación estándar es cero, no se puede calcular la curva normal.");
     return;
   }
-  if (tipo === "rango" && isNaN(valor2)) {
-    alert("Debes ingresar el Valor 2 para el cálculo entre rangos.");
-    return;
+
+  function normalCDF(x, mean, std) {
+    return (1 + erf((x - mean) / (std * Math.sqrt(2)))) / 2;
   }
 
-  const media = promedio(datos);
-  const desviacion = desviacionEstandar(datos);
+  function erf(x) {
+    const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+          a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+    const sign = x >= 0 ? 1 : -1;
+    x = Math.abs(x);
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+  }
+
+  if (val1 < 0) val1 = 0;
+  if (val1 > 1) val1 = 1;
+  if (val2 < 0) val2 = 0;
+  if (val2 > 1) val2 = 1;
 
   let probabilidad = 0;
+  let texto = "";
+  let z1 = ((val1 - media) / desv).toFixed(2);
+  let z2 = ((val2 - media) / desv).toFixed(2);
 
-  if (tipo === "exacto") {
-    probabilidad = densidadNormal(valor1, media, desviacion);
-  } else if (tipo === "mayor") {
-    probabilidad = 1 - cdf(valor1, media, desviacion);
-  } else if (tipo === "menor") {
-    probabilidad = cdf(valor1, media, desviacion);
-  } else if (tipo === "rango") {
-    probabilidad = cdf(valor2, media, desviacion) - cdf(valor1, media, desviacion);
+  switch (tipo) {
+    case "exacto":
+      probabilidad = normalCDF(val1 + 0.5, media, desv) - normalCDF(val1 - 0.5, media, desv);
+      texto = `Probabilidad valor exacto ${val1}: ${(probabilidad * 100).toFixed(2)}%<br>Z = ${z1}`;
+      break;
+    case "mayor":
+      probabilidad = 1 - normalCDF(val1, media, desv);
+      texto = `Probabilidad valores mayores que ${val1}: ${(probabilidad * 100).toFixed(2)}%<br>Z = ${z1}`;
+      break;
+    case "menor":
+      probabilidad = normalCDF(val1, media, desv);
+      texto = `Probabilidad valores menores que ${val1}: ${(probabilidad * 100).toFixed(2)}%<br>Z = ${z1}`;
+      break;
+    case "rango":
+      if (val2 < val1) {
+        alert("Valor 2 debe ser mayor o igual a Valor 1");
+        return;
+      }
+      probabilidad = normalCDF(val2, media, desv) - normalCDF(val1, media, desv);
+      texto = `Probabilidad valores entre ${val1} y ${val2}: ${(probabilidad * 100).toFixed(2)}%<br>Z1 = ${z1}, Z2 = ${z2}`;
+      break;
   }
 
-  document.getElementById("resultado").innerHTML =
-    `Probabilidad: <strong>${(probabilidad * 100).toFixed(2)}%</strong>`;
+  document.getElementById("resultado").innerHTML = texto;
+  document.getElementById("estadisticas").innerHTML = `
+    <strong>Estadísticas:</strong><br>
+    n = ${n}<br>
+    Media (μ) = ${media.toFixed(2)}<br>
+    Desviación estándar (σ) = ${desv.toFixed(2)}
+  `;
 
-  dibujarGrafica(media, desviacion, valor1, valor2, tipo);
-}
+  const minX = Math.min(...datos);
+  const maxX = Math.max(...datos);
+  const rangoXmin = (minX === 0 && maxX === 1) ? -0.5 : minX - 3 * desv;
+  const rangoXmax = (minX === 0 && maxX === 1) ? 1.5 : maxX + 3 * desv;
 
-function promedio(arr) {
-  return arr.reduce((a, b) => a + b, 0) / arr.length;
-}
+  const x = linspace(rangoXmin, rangoXmax, 500);
+  const y = x.map(xx => normalPDF(xx, media, desv));
 
-function desviacionEstandar(arr) {
-  const m = promedio(arr);
-  const sum = arr.reduce((a, b) => a + Math.pow(b - m, 2), 0);
-  return Math.sqrt(sum / arr.length);
-}
+  const ySombra = x.map(xx => {
+    switch (tipo) {
+      case "exacto": return (Math.abs(xx - val1) <= 0.5) ? normalPDF(xx, media, desv) : 0;
+      case "mayor":  return (xx >= val1) ? normalPDF(xx, media, desv) : 0;
+      case "menor":  return (xx <= val1) ? normalPDF(xx, media, desv) : 0;
+      case "rango":  return (xx >= val1 && xx <= val2) ? normalPDF(xx, media, desv) : 0;
+      default:       return 0;
+    }
+  });
 
-function densidadNormal(x, media, desviacion) {
-  const coef = 1 / (desviacion * Math.sqrt(2 * Math.PI));
-  const exponente = -0.5 * Math.pow((x - media) / desviacion, 2);
-  return coef * Math.exp(exponente);
-}
-
-function cdf(x, media, desviacion) {
-  return 0.5 * (1 + erf((x - media) / (desviacion * Math.sqrt(2))));
-}
-
-// Aproximación función error
-function erf(x) {
-  const a1 = 0.254829592,
-    a2 = -0.284496736,
-    a3 = 1.421413741,
-    a4 = -1.453152027,
-    a5 = 1.061405429,
-    p = 0.3275911;
-
-  const sign = x >= 0 ? 1 : -1;
-  x = Math.abs(x);
-
-  const t = 1 / (1 + p * x);
-  const y =
-    1 -
-    (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t) * Math.exp(-x * x);
-
-  return sign * y;
-}
-
-function dibujarGrafica(media, desviacion, v1, v2, tipo) {
-  const x = [];
-  const y = [];
-  const pasos = 200;
-  const inicio = media - 4 * desviacion;
-  const fin = media + 4 * desviacion;
-
-  for (let i = 0; i <= pasos; i++) {
-    const xi = inicio + (i * (fin - inicio)) / pasos;
-    x.push(xi);
-    y.push(densidadNormal(xi, media, desviacion));
-  }
-
-  const base = {
-    x: x,
-    y: y,
-    mode: "lines",
-    name: "Curva Normal",
+  const curva = {
+    x, y, type: "scatter", mode: "lines", name: "Curva normal",
     line: { color: "blue" }
   };
 
-  const sombreado = {
-    x: [],
-    y: [],
-    fill: "tozeroy",
+  const areaSombreada = {
+    x: [...x, ...x.slice().reverse()],
+    y: [...ySombra, ...ySombra.map(() => 0).reverse()],
+    fill: "toself",
+    fillcolor: "rgba(0, 0, 255, 0.3)",
+    line: { color: "transparent" },
     type: "scatter",
-    mode: "none",
-    fillcolor: "rgba(255, 0, 0, 0.3)",
-    name: "Área Sombreada"
+    name: "Área sombreada"
   };
 
-  if (tipo === "exacto") {
-    // Sombrear una pequeña ventana alrededor del valor exacto
-    const ancho = (fin - inicio) / pasos;
-    for (let i = 0; i <= pasos; i++) {
-      const xi = inicio + (i * (fin - inicio)) / pasos;
-      if (Math.abs(xi - v1) < ancho) {
-        sombreado.x.push(xi);
-        sombreado.y.push(densidadNormal(xi, media, desviacion));
-      }
-    }
-  } else if (tipo === "menor") {
-    for (let i = 0; i <= pasos; i++) {
-      const xi = inicio + (i * (fin - inicio)) / pasos;
-      if (xi <= v1) {
-        sombreado.x.push(xi);
-        sombreado.y.push(densidadNormal(xi, media, desviacion));
-      }
-    }
-  } else if (tipo === "mayor") {
-    for (let i = 0; i <= pasos; i++) {
-      const xi = inicio + (i * (fin - inicio)) / pasos;
-      if (xi >= v1) {
-        sombreado.x.push(xi);
-        sombreado.y.push(densidadNormal(xi, media, desviacion));
-      }
-    }
-  } else if (tipo === "rango") {
-    for (let i = 0; i <= pasos; i++) {
-      const xi = inicio + (i * (fin - inicio)) / pasos;
-      if (xi >= v1 && xi <= v2) {
-        sombreado.x.push(xi);
-        sombreado.y.push(densidadNormal(xi, media, desviacion));
-      }
-    }
-  }
+  const layout = {
+    title: "Distribución Normal",
+    yaxis: { title: "Densidad de probabilidad", zeroline: false },
+    xaxis: { title: "Valores" },
+    showlegend: true,
+  };
 
-  Plotly.newPlot("grafica", [base, sombreado], { margin: { t: 0 } });
+  Plotly.newPlot("grafica", [curva, areaSombreada], layout, { responsive: true });
 }
